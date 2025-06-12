@@ -34,7 +34,6 @@ class WeatherViewController: UIViewController, UITextFieldDelegate {
     }
     
     func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
-        
         if textField.text != "" {
             textField.placeholder = "Search"
             return true
@@ -45,6 +44,20 @@ class WeatherViewController: UIViewController, UITextFieldDelegate {
     }
     
     func textFieldDidEndEditing(_ textField: UITextField) {
+        guard let city = textField.text?.trimmingCharacters(in: .whitespacesAndNewlines), !city.isEmpty else { return }
+        Task {
+            do {
+                let weather = try await WeatherManager().fetchWeather(for: city)
+                print("Температура в \(weather.name): \(weather.main.temp)°C")
+                DispatchQueue.main.async {
+                    self.temperatureLabel.text = String(format: "%.1f", weather.main.temp)
+                    self.cityLabel.text = weather.name
+                }
+            } catch {
+                print("Ошибка загрузки погоды: \(error)")
+            }
+        }
+
         searchTextField.text = ""
     }
     
