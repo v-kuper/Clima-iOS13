@@ -9,7 +9,7 @@
 import UIKit
 
 class WeatherViewController: UIViewController, UITextFieldDelegate {
-
+    
     @IBOutlet weak var conditionImageView: UIImageView!
     @IBOutlet weak var temperatureLabel: UILabel!
     @IBOutlet weak var cityLabel: UILabel!
@@ -21,7 +21,7 @@ class WeatherViewController: UIViewController, UITextFieldDelegate {
         
         searchTextField.delegate = self
     }
-
+    
     @IBAction func searchPressed(_ sender: UIButton) {
         searchTextField.endEditing(true)
         print(searchTextField.text!)
@@ -47,17 +47,23 @@ class WeatherViewController: UIViewController, UITextFieldDelegate {
         guard let city = textField.text?.trimmingCharacters(in: .whitespacesAndNewlines), !city.isEmpty else { return }
         Task {
             do {
-                let weather = try await WeatherManager().fetchWeather(for: city)
-                print("Температура в \(weather.name): \(weather.main.temp)°C")
+                let weatherData = try await WeatherManager().fetchWeather(for: city)
+                let name = weatherData.name
+                let id = weatherData.weather[0].id
+                let temp = weatherData.main.temp
+                
+                let weather = WeatherModel(conditionID: id, cityName: name, temperature: temp)
+                
                 DispatchQueue.main.async {
-                    self.temperatureLabel.text = String(format: "%.1f", weather.main.temp)
-                    self.cityLabel.text = weather.name
+                    self.conditionImageView.image = UIImage(systemName: weather.conditionName)
+                    self.temperatureLabel.text = weather.temperatureString
+                    self.cityLabel.text = weather.cityName
                 }
             } catch {
                 print("Ошибка загрузки погоды: \(error)")
             }
         }
-
+        
         searchTextField.text = ""
     }
     

@@ -16,6 +16,7 @@
 		ADAA27CE231BC87F00365194 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = ADAA27CD231BC87F00365194 /* README.md */; };
 		F850E8452DFAE87000021BF7 /* WeatherManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F850E8442DFAE85800021BF7 /* WeatherManager.swift */; };
 		F850E8472DFAEB2200021BF7 /* WeatherResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = F850E8462DFAEB1E00021BF7 /* WeatherResponse.swift */; };
+		F8EBBEB92DFE064F000C62F4 /* WeatherModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8EBBEB82DFE0644000C62F4 /* WeatherModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +31,7 @@
 		ADAA27CD231BC87F00365194 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		F850E8442DFAE85800021BF7 /* WeatherManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherManager.swift; sourceTree = "<group>"; };
 		F850E8462DFAEB1E00021BF7 /* WeatherResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherResponse.swift; sourceTree = "<group>"; };
+		F8EBBEB82DFE0644000C62F4 /* WeatherModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,6 +96,7 @@
 		F850E8432DFAE84B00021BF7 /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				F8EBBEB82DFE0644000C62F4 /* WeatherModel.swift */,
 				F850E8462DFAEB1E00021BF7 /* WeatherResponse.swift */,
 				F850E8442DFAE85800021BF7 /* WeatherManager.swift */,
 			);
@@ -177,6 +180,7 @@
 				F850E8472DFAEB2200021BF7 /* WeatherResponse.swift in Sources */,
 				ADAA27B1231BBFAF00365194 /* AppDelegate.swift in Sources */,
 				F850E8452DFAE87000021BF7 /* WeatherManager.swift in Sources */,
+				F8EBBEB92DFE064F000C62F4 /* WeatherModel.swift in Sources */,
 				ADAA27B3231BBFAF00365194 /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

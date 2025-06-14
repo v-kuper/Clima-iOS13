@@ -16,13 +16,13 @@ class WeatherManager {
     func fetchWeather(for city: String) async throws -> WeatherResponse {
         let query = city.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? city
         let urlString = "\(baseURL)&q=\(query)&appid=\(apiKey)"
-        return try await performRequest(with: urlString)
+        return try await self.performRequest(with: urlString)
     }
 
     // MARK: - Coordinate Search (async)
     func fetchWeather(lat: Double, lon: Double) async throws -> WeatherResponse {
         let urlString = "\(baseURL)&lat=\(lat)&lon=\(lon)&appid=\(apiKey)"
-        return try await performRequest(with: urlString)
+        return try await self.performRequest(with: urlString)
     }
 
     // MARK: - Universal Request Method (async)
@@ -30,9 +30,12 @@ class WeatherManager {
         guard let url = URL(string: urlString) else {
             throw URLError(.badURL)
         }
-
         let (data, _) = try await URLSession.shared.data(from: url)
-        let decoded = try JSONDecoder().decode(WeatherResponse.self, from: data)
-        return decoded
+        return try await self.parseJSON(data: data)
+    }
+    
+    // MARK: - Parse JSON (async)
+    private func parseJSON(data: Data) async throws -> WeatherResponse {
+        try JSONDecoder().decode(WeatherResponse.self, from: data)
     }
 }
