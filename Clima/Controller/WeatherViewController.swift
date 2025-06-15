@@ -46,21 +46,32 @@ class WeatherViewController: UIViewController, UITextFieldDelegate, WeatherManag
     
     func textFieldDidEndEditing(_ textField: UITextField) {
         guard let city = textField.text?.trimmingCharacters(in: .whitespacesAndNewlines), !city.isEmpty else { return }
+        
         Task {
-            do {
-                try await weatherManager.fetchWeather(for: city)
-            } catch {
-                print("Ошибка загрузки погоды: \(error)")
-            }
+            await weatherManager.fetchWeather(for: city)
         }
         
         searchTextField.text = ""
     }
     
-    func didUpdateWeather(weather: WeatherModel) {
-        self.conditionImageView.image = UIImage(systemName: weather.conditionName)
-        self.temperatureLabel.text = weather.temperatureString
-        self.cityLabel.text = weather.cityName
+    // MARK: - WeatherManagerDelegate Methods
+    func didUpdateWeather(_ weatherManager: WeatherManager, weather: WeatherModel) {
+        conditionImageView.image = UIImage(systemName: weather.conditionName)
+        temperatureLabel.text = weather.temperatureString
+        cityLabel.text = weather.cityName
+    }
+    
+    func didFailWithError(error: Error) {
+        print("❌ Ошибка загрузки погоды: \(error.localizedDescription)")
+        showErrorAlert(message: "Не удалось загрузить погоду. Попробуйте ещё раз.")
+    }
+    
+    // MARK: - UI Helpers
+    
+    private func showErrorAlert(message: String) {
+        let alert = UIAlertController(title: "Ошибка", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Ок", style: .default))
+        present(alert, animated: true)
     }
 }
 

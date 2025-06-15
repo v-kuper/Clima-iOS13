@@ -9,8 +9,10 @@
 import Foundation
 
 // MARK: - WeatherManagerDelegate Protocol
+@MainActor
 protocol WeatherManagerDelegate: AnyObject {
-    func didUpdateWeather(weather: WeatherModel)
+    func didUpdateWeather(_ weatherManager: WeatherManager, weather: WeatherModel)
+    func didFailWithError(error: Error)
 }
 
 // MARK: - WeatherManager
@@ -23,37 +25,41 @@ class WeatherManager {
     weak var delegate: WeatherManagerDelegate?
     
     // MARK: - Fetch Weather by City Name
-    func fetchWeather(for city: String) async throws {
+    func fetchWeather(for city: String) async {
         let query = city.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? city
         let urlString = "\(baseURL)&q=\(query)&appid=\(apiKey)"
-        try await performRequest(with: urlString)
+        await performRequest(with: urlString)
     }
     
     // MARK: - Fetch Weather by Coordinates
-    func fetchWeather(lat: Double, lon: Double) async throws {
+    func fetchWeather(lat: Double, lon: Double) async {
         let urlString = "\(baseURL)&lat=\(lat)&lon=\(lon)&appid=\(apiKey)"
-        try await performRequest(with: urlString)
+        await performRequest(with: urlString)
     }
     
     // MARK: - Request Execution
-    private func performRequest(with urlString: String) async throws {
-        guard let url = URL(string: urlString) else {
-            throw URLError(.badURL)
-        }
-        
-        let (data, _) = try await URLSession.shared.data(from: url)
-        let weather = try await parseJSON(data: data)
-        
-        DispatchQueue.main.async { [weak self] in
-            self?.delegate?.didUpdateWeather(weather: weather)
+    private func performRequest(with urlString: String) async {
+        do {
+            guard let url = URL(string: urlString) else {
+                throw URLError(.badURL)
+            }
+            
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let weather = try parseJSON(data: data)
+            
+            delegate?.didUpdateWeather(self, weather: weather)
+        } catch {
+            delegate?.didFailWithError(error: error)
         }
     }
     
     // MARK: - JSON Parsing
-    private func parseJSON(data: Data) async throws -> WeatherModel {
+    private func parseJSON(data: Data) throws -> WeatherModel {
         let decodedData = try JSONDecoder().decode(WeatherResponse.self, from: data)
-        return WeatherModel(conditionID: decodedData.weather[0].id,
-                            cityName: decodedData.name,
-                            temperature: decodedData.main.temp)
+        return WeatherModel(
+            conditionID: decodedData.weather[0].id,
+            cityName: decodedData.name,
+            temperature: decodedData.main.temp
+        )
     }
 }
