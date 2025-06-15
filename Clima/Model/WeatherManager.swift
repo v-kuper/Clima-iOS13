@@ -8,34 +8,52 @@
 
 import Foundation
 
+// MARK: - WeatherManagerDelegate Protocol
+protocol WeatherManagerDelegate: AnyObject {
+    func didUpdateWeather(weather: WeatherModel)
+}
+
+// MARK: - WeatherManager
+@MainActor
 class WeatherManager {
+    
     private let apiKey = "162d249730070d6764131d4a7b000c3a"
     private let baseURL = "https://api.openweathermap.org/data/2.5/weather?units=metric"
-
-    // MARK: - City Search (async)
-    func fetchWeather(for city: String) async throws -> WeatherResponse {
+    
+    weak var delegate: WeatherManagerDelegate?
+    
+    // MARK: - Fetch Weather by City Name
+    func fetchWeather(for city: String) async throws {
         let query = city.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? city
         let urlString = "\(baseURL)&q=\(query)&appid=\(apiKey)"
-        return try await self.performRequest(with: urlString)
+        try await performRequest(with: urlString)
     }
-
-    // MARK: - Coordinate Search (async)
-    func fetchWeather(lat: Double, lon: Double) async throws -> WeatherResponse {
+    
+    // MARK: - Fetch Weather by Coordinates
+    func fetchWeather(lat: Double, lon: Double) async throws {
         let urlString = "\(baseURL)&lat=\(lat)&lon=\(lon)&appid=\(apiKey)"
-        return try await self.performRequest(with: urlString)
+        try await performRequest(with: urlString)
     }
-
-    // MARK: - Universal Request Method (async)
-    private func performRequest(with urlString: String) async throws -> WeatherResponse {
+    
+    // MARK: - Request Execution
+    private func performRequest(with urlString: String) async throws {
         guard let url = URL(string: urlString) else {
             throw URLError(.badURL)
         }
+        
         let (data, _) = try await URLSession.shared.data(from: url)
-        return try await self.parseJSON(data: data)
+        let weather = try await parseJSON(data: data)
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.delegate?.didUpdateWeather(weather: weather)
+        }
     }
     
-    // MARK: - Parse JSON (async)
-    private func parseJSON(data: Data) async throws -> WeatherResponse {
-        try JSONDecoder().decode(WeatherResponse.self, from: data)
+    // MARK: - JSON Parsing
+    private func parseJSON(data: Data) async throws -> WeatherModel {
+        let decodedData = try JSONDecoder().decode(WeatherResponse.self, from: data)
+        return WeatherModel(conditionID: decodedData.weather[0].id,
+                            cityName: decodedData.name,
+                            temperature: decodedData.main.temp)
     }
 }

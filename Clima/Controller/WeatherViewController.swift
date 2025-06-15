@@ -8,18 +8,19 @@
 
 import UIKit
 
-class WeatherViewController: UIViewController, UITextFieldDelegate {
+class WeatherViewController: UIViewController, UITextFieldDelegate, WeatherManagerDelegate {
     
     @IBOutlet weak var conditionImageView: UIImageView!
     @IBOutlet weak var temperatureLabel: UILabel!
     @IBOutlet weak var cityLabel: UILabel!
     @IBOutlet weak var searchTextField: UITextField!
     
+    let weatherManager = WeatherManager()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view.
-        
         searchTextField.delegate = self
+        weatherManager.delegate = self
     }
     
     @IBAction func searchPressed(_ sender: UIButton) {
@@ -47,18 +48,7 @@ class WeatherViewController: UIViewController, UITextFieldDelegate {
         guard let city = textField.text?.trimmingCharacters(in: .whitespacesAndNewlines), !city.isEmpty else { return }
         Task {
             do {
-                let weatherData = try await WeatherManager().fetchWeather(for: city)
-                let name = weatherData.name
-                let id = weatherData.weather[0].id
-                let temp = weatherData.main.temp
-                
-                let weather = WeatherModel(conditionID: id, cityName: name, temperature: temp)
-                
-                DispatchQueue.main.async {
-                    self.conditionImageView.image = UIImage(systemName: weather.conditionName)
-                    self.temperatureLabel.text = weather.temperatureString
-                    self.cityLabel.text = weather.cityName
-                }
+                try await weatherManager.fetchWeather(for: city)
             } catch {
                 print("Ошибка загрузки погоды: \(error)")
             }
@@ -67,5 +57,10 @@ class WeatherViewController: UIViewController, UITextFieldDelegate {
         searchTextField.text = ""
     }
     
+    func didUpdateWeather(weather: WeatherModel) {
+        self.conditionImageView.image = UIImage(systemName: weather.conditionName)
+        self.temperatureLabel.text = weather.temperatureString
+        self.cityLabel.text = weather.cityName
+    }
 }
 
