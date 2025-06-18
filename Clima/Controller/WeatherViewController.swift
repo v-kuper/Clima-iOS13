@@ -8,7 +8,7 @@
 
 import UIKit
 
-class WeatherViewController: UIViewController, UITextFieldDelegate, WeatherManagerDelegate {
+class WeatherViewController: UIViewController {
     
     @IBOutlet weak var conditionImageView: UIImageView!
     @IBOutlet weak var temperatureLabel: UILabel!
@@ -17,6 +17,7 @@ class WeatherViewController: UIViewController, UITextFieldDelegate, WeatherManag
     
     let weatherManager = WeatherManager()
     
+    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         searchTextField.delegate = self
@@ -28,24 +29,33 @@ class WeatherViewController: UIViewController, UITextFieldDelegate, WeatherManag
         print(searchTextField.text!)
     }
     
+    // MARK: - UI Helpers
+    private func showErrorAlert(message: String) {
+        let alert = UIAlertController(title: "Ошибка", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Ок", style: .default))
+        present(alert, animated: true)
+    }
+}
+
+// MARK: - UITextFieldDelegate
+extension WeatherViewController: UITextFieldDelegate {
+    
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         searchTextField.endEditing(true)
-        print(searchTextField.text!)
         return true
     }
     
     func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
-        if textField.text != "" {
-            textField.placeholder = "Search"
-            return true
-        } else {
+        guard let text = textField.text, !text.isEmpty else {
             textField.placeholder = "Enter city name"
             return false
         }
+        return true
     }
     
     func textFieldDidEndEditing(_ textField: UITextField) {
-        guard let city = textField.text?.trimmingCharacters(in: .whitespacesAndNewlines), !city.isEmpty else { return }
+        guard let city = textField.text?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !city.isEmpty else { return }
         
         Task {
             await weatherManager.fetchWeather(for: city)
@@ -53,8 +63,11 @@ class WeatherViewController: UIViewController, UITextFieldDelegate, WeatherManag
         
         searchTextField.text = ""
     }
+}
+
+// MARK: - WeatherManagerDelegate
+extension WeatherViewController: WeatherManagerDelegate {
     
-    // MARK: - WeatherManagerDelegate Methods
     func didUpdateWeather(_ weatherManager: WeatherManager, weather: WeatherModel) {
         conditionImageView.image = UIImage(systemName: weather.conditionName)
         temperatureLabel.text = weather.temperatureString
@@ -65,13 +78,4 @@ class WeatherViewController: UIViewController, UITextFieldDelegate, WeatherManag
         print("❌ Ошибка загрузки погоды: \(error.localizedDescription)")
         showErrorAlert(message: "Не удалось загрузить погоду. Попробуйте ещё раз.")
     }
-    
-    // MARK: - UI Helpers
-    
-    private func showErrorAlert(message: String) {
-        let alert = UIAlertController(title: "Ошибка", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "Ок", style: .default))
-        present(alert, animated: true)
-    }
 }
-
